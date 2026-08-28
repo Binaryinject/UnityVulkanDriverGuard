@@ -59,6 +59,13 @@ Alternatively, add this repository as a local/Git package in `Packages/manifest.
 "com.fstgame.unity-vulkan-driver-guard": "https://github.com/Binaryinject/UnityVulkanDriverGuard.git"
 ```
 
+Tagged GitHub releases provide two ready-to-install archives:
+
+- Import the `.unitypackage` through **Assets > Import Package > Custom Package**. It installs as an embedded package under `Packages/UnityVulkanDriverGuard`.
+- Install the `.tgz` through **Package Manager > Add package from tarball** to keep the package under `Packages`.
+
+The release workflow builds and tests both native proxies before creating either archive. The `.unitypackage` is self-contained and requires no extra importer package. Both installation methods have the same build behavior.
+
 Open **Project Settings > Player > Unity Vulkan Driver Guard** to edit the minimum Vulkan version, recommended versions, vendor URLs, and deny-list rules. The postprocessor applies to `StandaloneWindows64` and `StandaloneLinux64` builds.
 
 The native proxy binaries are expected at:
