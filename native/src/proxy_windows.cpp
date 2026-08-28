@@ -13,7 +13,7 @@ using UnityMainFunction = int (WINAPI*)(HINSTANCE, HINSTANCE, wchar_t*, int);
 int ForwardUnityMain(const char* exportName, HINSTANCE instance, HINSTANCE previous,
                      wchar_t* commandLine, int showCommand) {
     const std::filesystem::path directory = std::filesystem::u8path(uvdg::ExecutableDirectory());
-    const auto configPath = (directory / "UnityVulkanDriverGuard.ini").u8string();
+    const auto configPath = (directory / "DriverGuard.ini").u8string();
     const uvdg::PreflightResult preflight = uvdg::RunPreflight(configPath);
     if (!preflight.Passed()) {
         uvdg::ShowFailureDialog(preflight);

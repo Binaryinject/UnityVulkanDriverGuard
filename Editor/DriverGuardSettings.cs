@@ -15,8 +15,18 @@ namespace UnityVulkanDriverGuard.Editor
     [Serializable]
     internal sealed class DriverDenyRule
     {
+        public bool enabled = true;
         public DriverRulePlatform platform = DriverRulePlatform.All;
+        [Tooltip("UE5-style adapter name regular expression. Leave empty to match any name.")]
+        public string adapterNameRegex;
+        [Tooltip("Optional Vulkan PCI device IDs, for example 0x1B80,0x1B81 or 0x1B80-0x1B84.")]
+        public string deviceIds;
+        [Tooltip("Optional VkDriverId names or numbers, for example MESA_RADV or NVIDIA_PROPRIETARY.")]
+        public string driverIds;
         public string comparison = "<516.25";
+        public string suggestedVersion;
+        [Tooltip("Leave empty to use the vendor download URL.")]
+        public string downloadUrlOverride;
         public string reason = "Known Vulkan driver issue";
     }
 
@@ -52,11 +62,7 @@ namespace UnityVulkanDriverGuard.Editor
                 windowsSuggestedVersion = "516.25",
                 linuxSuggestedVersion = "515.43.04",
                 downloadUrl = "https://www.nvidia.com/Download/index.aspx",
-                denyList = new List<DriverDenyRule>
-                {
-                    new DriverDenyRule { platform = DriverRulePlatform.Windows, comparison = "<516.25" },
-                    new DriverDenyRule { platform = DriverRulePlatform.Linux, comparison = "<515.43.04" }
-                }
+                denyList = new List<DriverDenyRule>()
             };
         }
 
@@ -68,11 +74,7 @@ namespace UnityVulkanDriverGuard.Editor
                 windowsSuggestedVersion = "22.5.1",
                 linuxSuggestedVersion = "22.0.0",
                 downloadUrl = "https://www.amd.com/en/support/download/drivers.html",
-                denyList = new List<DriverDenyRule>
-                {
-                    new DriverDenyRule { platform = DriverRulePlatform.Windows, comparison = "<22.5.1" },
-                    new DriverDenyRule { platform = DriverRulePlatform.Linux, comparison = "<22.0.0" }
-                }
+                denyList = new List<DriverDenyRule>()
             };
         }
 
@@ -84,11 +86,7 @@ namespace UnityVulkanDriverGuard.Editor
                 windowsSuggestedVersion = "101.3413",
                 linuxSuggestedVersion = "22.0.0",
                 downloadUrl = "https://www.intel.com/content/www/us/en/download-center/home.html",
-                denyList = new List<DriverDenyRule>
-                {
-                    new DriverDenyRule { platform = DriverRulePlatform.Windows, comparison = "<101.3413" },
-                    new DriverDenyRule { platform = DriverRulePlatform.Linux, comparison = "<22.0.0" }
-                }
+                denyList = new List<DriverDenyRule>()
             };
         }
     }
@@ -122,4 +120,3 @@ namespace UnityVulkanDriverGuard.Editor
         }
     }
 }
-

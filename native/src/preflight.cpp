@@ -34,12 +34,14 @@ PreflightResult RunPreflight(const std::string& configPath) {
     result.downloadUrl = policy.downloadUrl;
     if (result.failure != FailureKind::None) return result;
 
-    for (const DriverRule& rule : policy.denyList) {
-        if (!Matches(probe.gpu.unifiedDriverVersion, rule)) continue;
+    for (const DriverRule& rule : config.driverDenyList) {
+        if (!Matches(probe.gpu, rule)) continue;
         result.failure = FailureKind::DriverDenied;
         result.reason = rule.reason.empty()
             ? "The installed graphics driver is on this game's deny list."
             : rule.reason;
+        if (!rule.suggestedVersion.empty()) result.suggestedVersion = rule.suggestedVersion;
+        if (!rule.downloadUrl.empty()) result.downloadUrl = rule.downloadUrl;
         break;
     }
     return result;

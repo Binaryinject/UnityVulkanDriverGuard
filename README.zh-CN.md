@@ -9,7 +9,7 @@ Unity Vulkan Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检
 - Vulkan Loader 是否可用，以及能否枚举物理设备。
 - 物理设备公开的 Vulkan API 版本，默认最低要求为 Vulkan 1.1。
 - GPU 厂商和设备标识。
-- 各显卡厂商独立的数字驱动版本拒绝列表。
+- 参考 UE5 的驱动拒绝规则，并支持 Vulkan RHI、显卡名称正则、`DeviceId` 和 `DriverId` 精确约束。
 - 各厂商的建议驱动版本和官方下载地址。
 
 检测失败时，原生弹窗会显示 GPU、已安装驱动、Vulkan 版本、失败原因、建议版本以及**更新驱动**按钮。弹窗不会提供切换渲染 API 的选项，另一个操作只有**退出**。
@@ -22,6 +22,8 @@ Unity Vulkan Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检
 
 - 类似 `FGPUDriverInfo` 的厂商版本归一化和数字版本比较。
 - 支持 `<`、`<=`、`=`、`>=`、`>` 运算符的 `DriverDenyList` 条目。
+- 只有 `RHIName`、`AdapterNameRegex`、`DeviceId`、Vulkan `DriverId` 等选择器匹配后，规则才会拦截驱动。
+- 默认不设置厂商全局最低驱动版本；没有命中规则的显卡只检查 Vulkan 1.1 能力。
 - `SuggestedDriverVersion` 和厂商驱动下载地址。
 - 类似 UE `RHIDetectAndWarnOfBadDrivers` 流程的启动早期阻断。
 
@@ -95,7 +97,7 @@ Unity 冒烟工程强制使用 **IL2CPP** 和 Vulkan，不使用 Mono Player，�
 
 ## 配置格式
 
-生成的 `UnityVulkanDriverGuard.ini` 特意采用接近 UE 的 INI 规则格式：
+生成的 `DriverGuard.ini` 特意采用接近 UE 的 INI 规则格式：
 
 ```ini
 [Global]
@@ -104,7 +106,7 @@ MinimumVulkanVersion=1.1
 [GPU_NVIDIA]
 SuggestedDriverVersion=516.25
 DownloadURL=https://www.nvidia.com/Download/index.aspx
-+DriverDenyList=<516.25|Known Vulkan driver issue
++DriverDenyList=(DriverVersion="<516.25",RHIName="Vulkan",DeviceId="0x1B80-0x1B8F",DriverId="NVIDIA_PROPRIETARY",Reason="Known Vulkan driver issue")
 ```
 
 拒绝列表应基于项目自己的兼容性验证结果以及显卡厂商当前的驱动公告进行维护。示例版本只是保守的初始值，并不代表所有更早版本都一定存在问题。

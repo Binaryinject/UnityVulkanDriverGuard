@@ -13,7 +13,7 @@ using PlayerMainFunction = int (*)(int, char**);
 
 __attribute__((visibility("default"))) int PlayerMain(int argc, char** argv) {
     const std::string directory = uvdg::ExecutableDirectory();
-    const auto preflight = uvdg::RunPreflight(directory + "/UnityVulkanDriverGuard.ini");
+    const auto preflight = uvdg::RunPreflight(directory + "/DriverGuard.ini");
     if (!preflight.Passed()) {
         uvdg::ShowFailureDialog(preflight);
         return 1;

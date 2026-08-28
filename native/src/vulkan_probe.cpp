@@ -1,5 +1,6 @@
 #include "uvdg/vulkan_probe.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstring>
@@ -23,8 +24,11 @@ using PFN_vkVoidFunction = void (*)();
 constexpr VkResult VK_SUCCESS = 0;
 constexpr std::uint32_t VK_STRUCTURE_TYPE_APPLICATION_INFO = 0;
 constexpr std::uint32_t VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1;
+constexpr std::uint32_t VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 = 1000059001;
+constexpr std::uint32_t VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES = 1000196000;
 constexpr std::uint32_t VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU = 2;
 constexpr std::uint32_t VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU = 1;
+constexpr std::uint32_t VK_API_VERSION_1_1 = (1u << 22) | (1u << 12);
 
 struct VkApplicationInfo {
     std::uint32_t sType;
@@ -47,11 +51,41 @@ struct VkInstanceCreateInfo {
     const char* const* ppEnabledExtensionNames;
 };
 
+struct VkExtensionProperties {
+    char extensionName[256];
+    std::uint32_t specVersion;
+};
+
+struct VkConformanceVersion {
+    std::uint8_t major;
+    std::uint8_t minor;
+    std::uint8_t subminor;
+    std::uint8_t patch;
+};
+
+struct VkPhysicalDeviceDriverProperties {
+    std::uint32_t sType;
+    void* pNext;
+    std::uint32_t driverId;
+    char driverName[256];
+    char driverInfo[256];
+    VkConformanceVersion conformanceVersion;
+};
+
+struct VkPhysicalDeviceProperties2Storage {
+    std::uint32_t sType;
+    void* pNext;
+    std::array<std::byte, 4096> properties;
+};
+
 using PFN_vkGetInstanceProcAddr = PFN_vkVoidFunction (*)(VkInstance, const char*);
 using PFN_vkCreateInstance = VkResult (*)(const VkInstanceCreateInfo*, const void*, VkInstance*);
 using PFN_vkDestroyInstance = void (*)(VkInstance, const void*);
 using PFN_vkEnumeratePhysicalDevices = VkResult (*)(VkInstance, std::uint32_t*, VkPhysicalDevice*);
 using PFN_vkGetPhysicalDeviceProperties = void (*)(VkPhysicalDevice, void*);
+using PFN_vkGetPhysicalDeviceProperties2 = void (*)(VkPhysicalDevice, void*);
+using PFN_vkEnumerateDeviceExtensionProperties = VkResult (*)(
+    VkPhysicalDevice, const char*, std::uint32_t*, VkExtensionProperties*);
 
 class VulkanLibrary {
 public:
@@ -104,7 +138,27 @@ int DeviceScore(const std::uint32_t type) {
     return 0;
 }
 
+bool SupportsDriverProperties(const VkPhysicalDevice device, const std::uint32_t apiVersion,
+                              const PFN_vkEnumerateDeviceExtensionProperties enumerateExtensions) {
+    const auto major = (apiVersion >> 22) & 0x7f;
+    const auto minor = (apiVersion >> 12) & 0x3ff;
+    if (major > 1 || (major == 1 && minor >= 2)) return true;
+    if (!enumerateExtensions) return false;
+
+    std::uint32_t count = 0;
+    if (enumerateExtensions(device, nullptr, &count, nullptr) != VK_SUCCESS || count == 0) {
+        return false;
+    }
+    std::vector<VkExtensionProperties> extensions(count);
+    if (enumerateExtensions(device, nullptr, &count, extensions.data()) != VK_SUCCESS) return false;
+    return std::any_of(extensions.begin(), extensions.end(), [](const auto& extension) {
+        return std::strncmp(extension.extensionName, "VK_KHR_driver_properties", 256) == 0;
+    });
+}
+
 GpuInfo ReadGpuInfo(const PFN_vkGetPhysicalDeviceProperties getProperties,
+                    const PFN_vkGetPhysicalDeviceProperties2 getProperties2,
+                    const PFN_vkEnumerateDeviceExtensionProperties enumerateExtensions,
                     const VkPhysicalDevice device) {
     alignas(16) std::array<std::byte, 4096> storage{};
     getProperties(device, storage.data());
@@ -117,6 +171,20 @@ GpuInfo ReadGpuInfo(const PFN_vkGetPhysicalDeviceProperties getProperties,
     result.deviceType = Read<std::uint32_t>(storage.data(), 16);
     const auto* name = reinterpret_cast<const char*>(storage.data() + 20);
     result.deviceName.assign(name, strnlen(name, 256));
+
+    if (getProperties2 && SupportsDriverProperties(device, result.apiVersion, enumerateExtensions)) {
+        VkPhysicalDeviceDriverProperties driverProperties{};
+        driverProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES;
+        VkPhysicalDeviceProperties2Storage properties{};
+        properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+        properties.pNext = &driverProperties;
+        getProperties2(device, &properties);
+        result.driverId = driverProperties.driverId;
+        result.driverName.assign(driverProperties.driverName,
+                                 strnlen(driverProperties.driverName, 256));
+        result.driverInfo.assign(driverProperties.driverInfo,
+                                 strnlen(driverProperties.driverInfo, 256));
+    }
     result.unifiedDriverVersion = DecodeDriverVersion(result.vendorId, result.rawDriverVersion);
     ApplyPlatformDriverVersion(result);
     return result;
@@ -151,7 +219,7 @@ ProbeResult ProbeVulkan() {
 
     const VkApplicationInfo applicationInfo{
         VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr, "UnityVulkanDriverGuard", 1,
-        "UnityVulkanDriverGuard", 1, (1u << 22)};
+        "UnityVulkanDriverGuard", 1, VK_API_VERSION_1_1};
     const VkInstanceCreateInfo createInfo{
         VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &applicationInfo,
         0, nullptr, 0, nullptr};
@@ -160,7 +228,7 @@ ProbeResult ProbeVulkan() {
     const VkResult createResult = createInstance(&createInfo, nullptr, &instance);
     if (createResult != VK_SUCCESS || !instance) {
         result.failure = FailureKind::VulkanInitializationFailed;
-        result.reason = "Vulkan could not create a minimal 1.0 instance (VkResult " +
+        result.reason = "Vulkan could not create a minimal 1.1 instance (VkResult " +
                         std::to_string(createResult) + ").";
         return result;
     }
@@ -171,6 +239,10 @@ ProbeResult ProbeVulkan() {
         getInstanceProcAddr(instance, "vkEnumeratePhysicalDevices"));
     const auto getProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(
         getInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties"));
+    const auto getProperties2 = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2>(
+        getInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties2"));
+    const auto enumerateExtensions = reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(
+        getInstanceProcAddr(instance, "vkEnumerateDeviceExtensionProperties"));
 
     if (!enumerateDevices || !getProperties) {
         if (destroyInstance) destroyInstance(instance, nullptr);
@@ -200,7 +272,7 @@ ProbeResult ProbeVulkan() {
 
     int bestScore = -1;
     for (std::uint32_t i = 0; i < deviceCount; ++i) {
-        auto gpu = ReadGpuInfo(getProperties, devices[i]);
+        auto gpu = ReadGpuInfo(getProperties, getProperties2, enumerateExtensions, devices[i]);
         const int score = DeviceScore(gpu.deviceType);
         if (score > bestScore) {
             bestScore = score;
@@ -219,4 +291,3 @@ namespace uvdg {
 void ApplyPlatformDriverVersion(GpuInfo&) {}
 }  // namespace uvdg
 #endif
-

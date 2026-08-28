@@ -28,9 +28,23 @@ enum class Comparison {
 };
 
 struct DriverRule {
+    struct IdRange {
+        std::uint32_t first = 0;
+        std::uint32_t last = 0;
+    };
+
+    std::uint32_t vendorId = 0;
+    std::string rhiName;
+    std::string adapterNameRegex;
+    bool allDeviceIds = false;
+    bool allDriverIds = false;
+    std::vector<IdRange> deviceIds;
+    std::vector<std::uint32_t> driverIds;
     Comparison comparison = Comparison::Less;
     Version version;
     std::string reason;
+    std::string suggestedVersion;
+    std::string downloadUrl;
 };
 
 struct VendorPolicy {
@@ -48,6 +62,7 @@ struct Config {
     VendorPolicy amd;
     VendorPolicy intel;
     VendorPolicy other;
+    std::vector<DriverRule> driverDenyList;
 };
 
 struct GpuInfo {
@@ -56,6 +71,7 @@ struct GpuInfo {
     std::uint32_t vendorId = 0;
     std::uint32_t deviceId = 0;
     std::uint32_t deviceType = 0;
+    std::uint32_t driverId = 0;
     std::string deviceName;
     std::string driverName;
     std::string driverInfo;
@@ -82,4 +98,3 @@ struct PreflightResult {
 };
 
 }  // namespace uvdg
-

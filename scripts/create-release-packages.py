@@ -20,7 +20,7 @@ PACKAGE_FILES = (
     "LICENSE",
     "README.md",
     "README.zh-CN.md",
-    "UnityVulkanDriverGuard.example.ini",
+    "DriverGuard.example.ini",
 )
 
 

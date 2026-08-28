@@ -9,7 +9,7 @@ Unity Vulkan Driver Guard is a pre-render GPU check for standalone Unity players
 - Vulkan Loader availability and physical-device enumeration.
 - Physical-device API version. The default minimum is Vulkan 1.1.
 - GPU vendor and device identity.
-- A vendor-specific, numeric driver deny list.
+- UE5-style driver deny rules constrained by Vulkan RHI, adapter-name regex, and optional Vulkan `DeviceId`/`DriverId` selectors.
 - A vendor-specific recommended driver version and download URL.
 
 If a check fails, the native dialog shows the GPU, installed driver, Vulkan version, reason, recommended version, and an **Update driver** button. There is no render-API switch. The other action is **Exit**.
@@ -22,6 +22,8 @@ The rule and message flow follows the public UE5 RHI startup model:
 
 - `FGPUDriverInfo`-style vendor normalization and numeric version comparison.
 - `DriverDenyList` entries with `<`, `<=`, `=`, `>=`, or `>` operators.
+- `RHIName`, `AdapterNameRegex`, `DeviceId`, and Vulkan `DriverId` selectors are evaluated before a rule can deny a driver.
+- No vendor-wide minimum driver is assumed by default; an unmatched GPU is checked only for Vulkan 1.1 support.
 - `SuggestedDriverVersion` and vendor download URL fields.
 - Early startup blocking equivalent to UE's `RHIDetectAndWarnOfBadDrivers` path.
 
@@ -95,7 +97,7 @@ The Unity smoke project uses **IL2CPP**, not Mono, and forces Vulkan. This match
 
 ## Configuration Format
 
-The generated `UnityVulkanDriverGuard.ini` is intentionally close to UE's INI style:
+The generated `DriverGuard.ini` is intentionally close to UE's INI style:
 
 ```ini
 [Global]
@@ -104,7 +106,7 @@ MinimumVulkanVersion=1.1
 [GPU_NVIDIA]
 SuggestedDriverVersion=516.25
 DownloadURL=https://www.nvidia.com/Download/index.aspx
-+DriverDenyList=<516.25|Known Vulkan driver issue
++DriverDenyList=(DriverVersion="<516.25",RHIName="Vulkan",DeviceId="0x1B80-0x1B8F",DriverId="NVIDIA_PROPRIETARY",Reason="Known Vulkan driver issue")
 ```
 
 Keep deny-list values based on your own compatibility validation and the current driver advisories from each vendor. The sample values are conservative starting points, not a claim that every older driver is broken.
