@@ -19,7 +19,7 @@ void RunConfigTests() {
     {
         std::ofstream output(path);
         output << "[Global]\nMinimumVulkanVersion=1.1\n"
-                  "[GPU_NVIDIA]\nSuggestedDriverVersion=551.76\n"
+                  "[GPU_NVIDIA]\nMinimumDriverVersion=516.25\nSuggestedDriverVersion=551.76\n"
                   "+DriverDenyList=<999.0|Legacy syntax must be ignored\n"
                   "+DriverDenyList=(DriverVersion=\"<551.76\",RHIName=\"Vulkan\",AdapterNameRegex=\".*GTX 10[0-9]0.*\",DeviceId=\"0x1B80\",DriverId=\"NVIDIA_PROPRIETARY\",SuggestedDriverVersion=\"551.76\",Reason=\"Known Vulkan issue\")\n"
                   "DownloadURL=https://example.invalid/nvidia\n";
@@ -29,7 +29,8 @@ void RunConfigTests() {
     std::filesystem::remove(path);
     Require(config.minimumVulkanMajor == 1 && config.minimumVulkanMinor == 1,
             "minimum Vulkan version was not parsed");
-    Require(config.driverDenyList.size() == 1, "deny-list rule was not parsed");
+    Require(config.driverDenyList.size() == 2,
+            "deny-list and minimum driver rules were not parsed");
     Require(config.driverDenyList[0].deviceIds.size() == 1 &&
             config.driverDenyList[0].driverIds.size() == 1 &&
             config.driverDenyList[0].rhiName == "Vulkan" &&
@@ -55,4 +56,10 @@ void RunConfigTests() {
     gpu.driverId = 4;
     gpu.deviceName = "NVIDIA GeForce RTX 4090";
     Require(!uvdg::Matches(gpu, config.driverDenyList[0]), "adapter regex mismatch must not deny");
+    gpu.unifiedDriverVersion = uvdg::Version::Parse("500.0");
+    Require(uvdg::Matches(gpu, config.driverDenyList[1]),
+            "vendor minimum must deny an older driver without device selectors");
+    gpu.unifiedDriverVersion = uvdg::Version::Parse("516.25");
+    Require(!uvdg::Matches(gpu, config.driverDenyList[1]),
+            "vendor minimum boundary must be accepted");
 }

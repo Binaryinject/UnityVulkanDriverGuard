@@ -49,6 +49,8 @@ struct DriverRule {
 
 struct VendorPolicy {
     std::string name;
+    Version minimumVersion;
+    std::string minimumVersionText;
     Version suggestedVersion;
     std::string suggestedVersionText;
     std::string downloadUrl;

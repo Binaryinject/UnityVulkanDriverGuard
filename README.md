@@ -23,7 +23,7 @@ The rule and message flow follows the public UE5 RHI startup model:
 - `FGPUDriverInfo`-style vendor normalization and numeric version comparison.
 - `DriverDenyList` entries with `<`, `<=`, `=`, `>=`, or `>` operators.
 - `RHIName`, `AdapterNameRegex`, `DeviceId`, and Vulkan `DriverId` selectors are evaluated before a rule can deny a driver.
-- No vendor-wide minimum driver is assumed by default; an unmatched GPU is checked only for Vulkan 1.1 support.
+- `MinimumDriverVersion` applies a vendor-wide threshold without requiring `DeviceId` selectors.
 - `SuggestedDriverVersion` and vendor download URL fields.
 - Early startup blocking equivalent to UE's `RHIDetectAndWarnOfBadDrivers` path.
 
@@ -68,7 +68,7 @@ Tagged GitHub releases provide two ready-to-install archives:
 
 The release workflow builds and tests both native proxies before creating either archive. The `.unitypackage` is self-contained and requires no extra importer package. Both installation methods have the same build behavior.
 
-Open **Project Settings > Player > Unity Vulkan Driver Guard** to edit the minimum Vulkan version, recommended versions, vendor URLs, and deny-list rules. The postprocessor applies to `StandaloneWindows64` and `StandaloneLinux64` builds.
+Open **Project Settings > Player > Unity Vulkan Driver Guard** to edit the minimum Vulkan version, per-platform minimum and recommended driver versions, vendor URLs, and optional deny-list rules. The postprocessor applies to `StandaloneWindows64` and `StandaloneLinux64` builds.
 
 The native proxy binaries are expected at:
 
@@ -104,12 +104,12 @@ The generated `DriverGuard.ini` is intentionally close to UE's INI style:
 MinimumVulkanVersion=1.1
 
 [GPU_NVIDIA]
+MinimumDriverVersion=516.25
 SuggestedDriverVersion=516.25
 DownloadURL=https://www.nvidia.com/Download/index.aspx
-+DriverDenyList=(DriverVersion="<516.25",RHIName="Vulkan",DeviceId="0x1B80-0x1B8F",DriverId="NVIDIA_PROPRIETARY",Reason="Known Vulkan driver issue")
 ```
 
-Keep deny-list values based on your own compatibility validation and the current driver advisories from each vendor. The sample values are conservative starting points, not a claim that every older driver is broken.
+The minimum applies to every Vulkan device from that vendor and does not emit a `DeviceId`. Drivers below it show the warning dialog; users can still continue when the required Vulkan API is available. Keep minimum and optional deny-list values aligned with your compatibility validation and current vendor advisories.
 
 ### Generate Device IDs from pci.ids
 

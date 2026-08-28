@@ -238,6 +238,21 @@ bool Contains(const std::vector<std::uint32_t>& values, const std::uint32_t valu
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
+void AppendMinimumRule(Config& config, const VendorPolicy& policy,
+                       const std::uint32_t vendorId) {
+    if (policy.minimumVersion.components.empty()) return;
+    DriverRule rule;
+    rule.vendorId = vendorId;
+    rule.rhiName = "Vulkan";
+    rule.comparison = Comparison::Less;
+    rule.version = policy.minimumVersion;
+    rule.reason = "The installed graphics driver is below this game's minimum version.";
+    rule.suggestedVersion = policy.suggestedVersionText.empty()
+        ? policy.minimumVersionText : policy.suggestedVersionText;
+    rule.downloadUrl = policy.downloadUrl;
+    config.driverDenyList.push_back(std::move(rule));
+}
+
 }  // namespace
 
 Config DefaultConfig() {
@@ -283,7 +298,10 @@ Config LoadConfig(const std::string& path) {
             continue;
         }
 
-        if (key == "suggesteddriverversion") {
+        if (key == "minimumdriverversion") {
+            policy->minimumVersionText = value;
+            policy->minimumVersion = Version::Parse(value);
+        } else if (key == "suggesteddriverversion") {
             policy->suggestedVersionText = value;
             policy->suggestedVersion = Version::Parse(value);
         } else if (key == "downloadurl") {
@@ -295,6 +313,9 @@ Config LoadConfig(const std::string& path) {
             }
         }
     }
+    AppendMinimumRule(config, config.nvidia, kVendorNvidia);
+    AppendMinimumRule(config, config.amd, kVendorAmd);
+    AppendMinimumRule(config, config.intel, kVendorIntel);
     return config;
 }
 

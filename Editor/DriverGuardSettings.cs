@@ -34,6 +34,8 @@ namespace UnityVulkanDriverGuard.Editor
     internal sealed class VendorDriverPolicy
     {
         public string vendorName;
+        public string windowsMinimumVersion;
+        public string linuxMinimumVersion;
         public string windowsSuggestedVersion;
         public string linuxSuggestedVersion;
         public string downloadUrl;
@@ -59,6 +61,8 @@ namespace UnityVulkanDriverGuard.Editor
             return new VendorDriverPolicy
             {
                 vendorName = "NVIDIA",
+                windowsMinimumVersion = "516.25",
+                linuxMinimumVersion = "515.43.04",
                 windowsSuggestedVersion = "516.25",
                 linuxSuggestedVersion = "515.43.04",
                 downloadUrl = "https://www.nvidia.com/Download/index.aspx",
@@ -71,6 +75,8 @@ namespace UnityVulkanDriverGuard.Editor
             return new VendorDriverPolicy
             {
                 vendorName = "AMD",
+                windowsMinimumVersion = "22.5.1",
+                linuxMinimumVersion = "22.0.0",
                 windowsSuggestedVersion = "22.5.1",
                 linuxSuggestedVersion = "22.0.0",
                 downloadUrl = "https://www.amd.com/en/support/download/drivers.html",
@@ -83,6 +89,8 @@ namespace UnityVulkanDriverGuard.Editor
             return new VendorDriverPolicy
             {
                 vendorName = "Intel",
+                windowsMinimumVersion = "101.3413",
+                linuxMinimumVersion = "22.0.0",
                 windowsSuggestedVersion = "101.3413",
                 linuxSuggestedVersion = "22.0.0",
                 downloadUrl = "https://www.intel.com/content/www/us/en/download-center/home.html",

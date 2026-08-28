@@ -96,6 +96,10 @@ namespace UnityVulkanDriverGuard.Editor
             output.AppendLine();
             output.AppendLine($"[{section}]");
             var suggestedVersion = windows ? policy.windowsSuggestedVersion : policy.linuxSuggestedVersion;
+            var minimumVersion = windows ? policy.windowsMinimumVersion : policy.linuxMinimumVersion;
+            if (string.IsNullOrWhiteSpace(minimumVersion))
+                minimumVersion = suggestedVersion;
+            output.AppendLine($"MinimumDriverVersion={Safe(minimumVersion)}");
             output.AppendLine($"SuggestedDriverVersion={Safe(suggestedVersion)}");
             output.AppendLine($"DownloadURL={Safe(policy.downloadUrl)}");
 

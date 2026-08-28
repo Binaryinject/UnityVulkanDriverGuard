@@ -23,7 +23,7 @@ Unity Vulkan Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检
 - 类似 `FGPUDriverInfo` 的厂商版本归一化和数字版本比较。
 - 支持 `<`、`<=`、`=`、`>=`、`>` 运算符的 `DriverDenyList` 条目。
 - 只有 `RHIName`、`AdapterNameRegex`、`DeviceId`、Vulkan `DriverId` 等选择器匹配后，规则才会拦截驱动。
-- 默认不设置厂商全局最低驱动版本；没有命中规则的显卡只检查 Vulkan 1.1 能力。
+- `MinimumDriverVersion` 设置厂商全局最低版本，不需要配置 `DeviceId` 选择器。
 - `SuggestedDriverVersion` 和厂商驱动下载地址。
 - 类似 UE `RHIDetectAndWarnOfBadDrivers` 流程的启动早期阻断。
 
@@ -68,7 +68,7 @@ YourGame/
 
 Release 流程会先编译并测试 Windows、Linux 两个平台的原生代理，再生成这两种压缩包。`.unitypackage` 自带全部内容，用户不需要额外安装导入工具；两种安装方式的构建行为相同。
 
-在 **Project Settings > Player > Unity Vulkan Driver Guard** 中可以编辑最低 Vulkan 版本、建议驱动版本、厂商下载地址和拒绝列表。构建后处理适用于 `StandaloneWindows64` 和 `StandaloneLinux64`。
+在 **Project Settings > Player > Unity Vulkan Driver Guard** 中可以编辑最低 Vulkan 版本、各平台最低及建议驱动版本、厂商下载地址和可选拒绝列表。构建后处理适用于 `StandaloneWindows64` 和 `StandaloneLinux64`。
 
 原生代理文件应位于：
 
@@ -104,12 +104,12 @@ Unity 冒烟工程强制使用 **IL2CPP** 和 Vulkan，不使用 Mono Player，�
 MinimumVulkanVersion=1.1
 
 [GPU_NVIDIA]
+MinimumDriverVersion=516.25
 SuggestedDriverVersion=516.25
 DownloadURL=https://www.nvidia.com/Download/index.aspx
-+DriverDenyList=(DriverVersion="<516.25",RHIName="Vulkan",DeviceId="0x1B80-0x1B8F",DriverId="NVIDIA_PROPRIETARY",Reason="Known Vulkan driver issue")
 ```
 
-拒绝列表应基于项目自己的兼容性验证结果以及显卡厂商当前的驱动公告进行维护。示例版本只是保守的初始值，并不代表所有更早版本都一定存在问题。
+最低版本作用于该厂商的所有 Vulkan 设备，生成时不会写入 `DeviceId`。低于该版本会显示警告；满足所需 Vulkan API 时玩家仍可选择继续运行。最低版本和可选拒绝列表应结合项目兼容性验证及厂商公告维护。
 
 ### 使用 pci.ids 自动生成 Device ID
 
