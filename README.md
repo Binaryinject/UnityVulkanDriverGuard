@@ -111,6 +111,17 @@ DownloadURL=https://www.nvidia.com/Download/index.aspx
 
 Keep deny-list values based on your own compatibility validation and the current driver advisories from each vendor. The sample values are conservative starting points, not a claim that every older driver is broken.
 
+### Generate Device IDs from pci.ids
+
+`pci.ids` can supply the hardware ID list automatically. The generator runs at build/release time and does not add a database or executable to the player:
+
+```powershell
+python scripts/generate-driverguard-ini.py --output DriverGuard.generated.ini
+python scripts/generate-driverguard-ini.py --output DriverGuard.generated.ini --nvidia-deny-below 551.76
+```
+
+The first command only emits the current NVIDIA/AMD/Intel IDs as comments. A `--*-deny-below` option is opt-in and creates a rule covering the IDs from `pci.ids`; the threshold must still be validated against the game's Unity/Vulkan test matrix. `pci.ids` is maintained by [pciutils](https://github.com/pciutils/pciids) and its license/notice must be retained when distributing generated data.
+
 ## Platform Notes
 
 - The probe dynamically loads `vulkan-1.dll` on Windows and `libvulkan.so.1` on Linux, so the Unity Editor and project do not need Vulkan SDK headers or libraries.

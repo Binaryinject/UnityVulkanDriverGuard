@@ -21,6 +21,7 @@ PACKAGE_FILES = (
     "README.md",
     "README.zh-CN.md",
     "DriverGuard.example.ini",
+    "scripts/generate-driverguard-ini.py",
 )
 
 

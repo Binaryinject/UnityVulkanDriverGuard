@@ -111,6 +111,17 @@ DownloadURL=https://www.nvidia.com/Download/index.aspx
 
 拒绝列表应基于项目自己的兼容性验证结果以及显卡厂商当前的驱动公告进行维护。示例版本只是保守的初始值，并不代表所有更早版本都一定存在问题。
 
+### 使用 pci.ids 自动生成 Device ID
+
+可以在构建或发布阶段使用 `pci.ids` 自动生成硬件 ID 列表；玩家运行时不会携带数据库，也不会增加第二个可执行文件：
+
+```powershell
+python scripts/generate-driverguard-ini.py --output DriverGuard.generated.ini
+python scripts/generate-driverguard-ini.py --output DriverGuard.generated.ini --nvidia-deny-below 551.76
+```
+
+第一条命令只会把当前 NVIDIA/AMD/Intel 的 ID 写入注释。只有显式传入 `--*-deny-below` 才会生成覆盖这些 ID 的规则；阈值仍必须结合项目的 Unity/Vulkan 真机测试矩阵验证。`pci.ids` 由 [pciutils](https://github.com/pciutils/pciids) 维护，发布生成数据时必须保留其许可证和声明。
+
 ## 平台说明
 
 - Windows 动态加载 `vulkan-1.dll`，Linux 动态加载 `libvulkan.so.1`，因此 Unity Editor 和游戏工程不需要 Vulkan SDK 头文件或链接库。
