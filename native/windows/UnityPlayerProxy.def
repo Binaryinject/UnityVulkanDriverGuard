@@ -1,0 +1,5 @@
+LIBRARY UnityPlayer
+EXPORTS
+    UnityMain
+    UnityMain2
+

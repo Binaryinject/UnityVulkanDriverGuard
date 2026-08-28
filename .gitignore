@@ -1,0 +1,8 @@
+/build/
+/.vs/
+/.idea/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib

@@ -1,0 +1,30 @@
+name: Native
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnityPlayerProxy-Windows-x86_64
+          path: Native~/Windows/x86_64/UnityPlayer.dll
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        run: ./scripts/build-linux.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnityPlayerProxy-Linux-x86_64
+          path: Native~/Linux/x86_64/UnityPlayer.so
+

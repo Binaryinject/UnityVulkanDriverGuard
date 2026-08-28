@@ -1,0 +1,19 @@
+{
+  "name": "com.fstgame.unity-vulkan-driver-guard",
+  "version": "0.1.0",
+  "displayName": "Unity Vulkan Driver Guard",
+  "description": "Checks Vulkan support and GPU driver policy before Unity creates its graphics device on Windows and Linux.",
+  "unity": "2021.3",
+  "keywords": [
+    "vulkan",
+    "driver",
+    "preflight",
+    "windows",
+    "linux"
+  ],
+  "author": {
+    "name": "FSTGAME"
+  },
+  "license": "MIT"
+}
+
