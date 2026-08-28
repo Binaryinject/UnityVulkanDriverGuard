@@ -12,35 +12,41 @@ namespace {
 constexpr LocalizedText kEnglish{
     "Warning: graphics driver problem",
     "Graphics driver update required",
-    "Vulkan 1.1 is required",
-    "Update driver", "Exit", "GPU", "Installed driver", "Vulkan API", "Recommended driver"};
+    "Required Vulkan API is unavailable",
+    "Update driver", "Continue anyway", "Exit", "GPU", "Installed driver", "Current Vulkan API",
+    "Required Vulkan API", "or newer", "Recommended driver"};
 constexpr LocalizedText kChinese{
     "警告：显卡驱动问题",
     "需要更新显卡驱动",
-    "需要 Vulkan 1.1",
-    "更新驱动", "退出", "显卡", "已安装驱动", "Vulkan API", "建议驱动"};
+    "不满足 Vulkan API 要求",
+    "更新驱动", "仍然继续", "退出", "显卡", "已安装驱动", "当前 Vulkan API",
+    "要求的 Vulkan API", "或更高版本", "建议驱动"};
 constexpr LocalizedText kJapanese{
     "警告：グラフィックスドライバーの問題",
     "グラフィックスドライバーの更新が必要です",
-    "Vulkan 1.1 が必要です",
-    "ドライバーを更新", "終了", "GPU", "インストール済みドライバー", "Vulkan API", "推奨ドライバー"};
+    "必要な Vulkan API を利用できません",
+    "ドライバーを更新", "このまま続行", "終了", "GPU", "インストール済みドライバー", "現在の Vulkan API",
+    "必要な Vulkan API", "以降", "推奨ドライバー"};
 constexpr LocalizedText kKorean{
     "경고: 그래픽 드라이버 문제",
     "그래픽 드라이버 업데이트 필요",
-    "Vulkan 1.1 필요",
-    "드라이버 업데이트", "종료", "GPU", "설치된 드라이버", "Vulkan API", "권장 드라이버"};
+    "필수 Vulkan API를 사용할 수 없음",
+    "드라이버 업데이트", "계속 실행", "종료", "GPU", "설치된 드라이버", "현재 Vulkan API",
+    "필수 Vulkan API", "이상", "권장 드라이버"};
 
-std::string VulkanUnsupported(const Language language, const GpuInfo& gpu) {
-    const std::string version = FormatVulkanVersion(gpu.apiVersion);
+std::string VulkanUnsupported(const Language language, const PreflightResult& result) {
+    const std::string version = FormatVulkanVersion(result.gpu.apiVersion);
+    const std::string required = std::to_string(result.requiredVulkanMajor) + "." +
+                                 std::to_string(result.requiredVulkanMinor);
     switch (language) {
         case Language::Chinese:
-            return "此显卡仅支持 Vulkan " + version + "，游戏需要 Vulkan 1.1 或更高版本。";
+            return "此显卡仅支持 Vulkan " + version + "，游戏需要 Vulkan " + required + " 或更高版本。";
         case Language::Japanese:
-            return "この GPU が対応する Vulkan は " + version + " です。このゲームには Vulkan 1.1 以降が必要です。";
+            return "この GPU が対応する Vulkan は " + version + " です。このゲームには Vulkan " + required + " 以降が必要です。";
         case Language::Korean:
-            return "이 GPU는 Vulkan " + version + "을(를) 지원합니다. 게임에는 Vulkan 1.1 이상이 필요합니다.";
+            return "이 GPU는 Vulkan " + version + "을(를) 지원합니다. 게임에는 Vulkan " + required + " 이상이 필요합니다.";
         default:
-            return "This GPU exposes Vulkan " + version + ", but this game requires Vulkan 1.1 or newer.";
+            return "This GPU exposes Vulkan " + version + ", but this game requires Vulkan " + required + " or newer.";
     }
 }
 
@@ -68,7 +74,7 @@ const LocalizedText& Text(const Language language) {
 std::string LocalizedReason(const Language language, const PreflightResult& result) {
     if (language == Language::English && !result.reason.empty()) return result.reason;
     if (result.failure == FailureKind::VulkanVersionUnsupported) {
-        return VulkanUnsupported(language, result.gpu);
+        return VulkanUnsupported(language, result);
     }
 
     switch (language) {

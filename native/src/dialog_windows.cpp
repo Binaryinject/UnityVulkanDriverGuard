@@ -75,6 +75,9 @@ bool ShowFailureDialog(const PreflightResult& result) {
         details << "\n" << text.installedDriver << ": "
                 << result.gpu.unifiedDriverVersion.ToString();
         details << "\n" << text.vulkanApi << ": " << FormatVulkanVersion(result.gpu.apiVersion);
+        details << "\n" << text.requiredVulkanApi << ": "
+                << result.requiredVulkanMajor << '.' << result.requiredVulkanMinor
+                << ' ' << text.orNewer;
     }
     if (!result.suggestedVersion.empty()) {
         details << "\n" << text.recommendedDriver << ": " << result.suggestedVersion;
@@ -85,9 +88,11 @@ bool ShowFailureDialog(const PreflightResult& result) {
                                         ? text.driverTitle : text.vulkanTitle);
     const std::wstring content = Wide(details.str());
     const std::wstring updateDriver = Wide(text.updateDriver);
+    const std::wstring continueRunning = Wide(text.continueRunning);
     const std::wstring exit = Wide(text.exit);
-    const TASKDIALOG_BUTTON buttons[] = {
-        {1001, updateDriver.c_str()}, {1002, exit.c_str()}};
+    std::vector<TASKDIALOG_BUTTON> buttons{{1001, updateDriver.c_str()}};
+    if (result.CanContinue()) buttons.push_back({1002, continueRunning.c_str()});
+    buttons.push_back({1003, exit.c_str()});
 
     TASKDIALOGCONFIG config{};
     config.cbSize = sizeof(config);
@@ -96,24 +101,25 @@ bool ShowFailureDialog(const PreflightResult& result) {
     config.pszMainIcon = TD_WARNING_ICON;
     config.pszMainInstruction = title.c_str();
     config.pszContent = content.c_str();
-    config.cButtons = static_cast<UINT>(std::size(buttons));
-    config.pButtons = buttons;
+    config.cButtons = static_cast<UINT>(buttons.size());
+    config.pButtons = buttons.data();
     config.nDefaultButton = 1001;
 
-    int selected = 1002;
+    int selected = 1003;
     const HRESULT dialogResult = TaskDialogIndirect(&config, &selected, nullptr, nullptr);
     if (FAILED(dialogResult)) {
-        selected = MessageBoxW(nullptr, content.c_str(), title.c_str(),
-                               MB_ICONWARNING | MB_YESNO | MB_SETFOREGROUND) == IDYES
-            ? 1001 : 1002;
+        const UINT fallbackButtons = result.CanContinue() ? MB_YESNOCANCEL : MB_YESNO;
+        const int fallback = MessageBoxW(nullptr, content.c_str(), title.c_str(),
+                                         MB_ICONWARNING | fallbackButtons | MB_SETFOREGROUND);
+        selected = fallback == IDYES ? 1001
+                 : (result.CanContinue() && fallback == IDNO) ? 1002 : 1003;
     }
 
     if (selected == 1001 && !result.downloadUrl.empty()) {
         const auto url = Wide(result.downloadUrl);
         ShellExecuteW(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-        return true;
     }
-    return false;
+    return selected == 1002 && result.CanContinue();
 }
 
 }  // namespace uvdg

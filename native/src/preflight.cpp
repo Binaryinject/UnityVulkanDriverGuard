@@ -12,6 +12,8 @@ PreflightResult RunPreflight(const std::string& configPath) {
     const ProbeResult probe = ProbeVulkan();
 
     PreflightResult result;
+    result.requiredVulkanMajor = config.minimumVulkanMajor;
+    result.requiredVulkanMinor = config.minimumVulkanMinor;
     result.failure = probe.failure;
     result.gpu = probe.gpu;
     result.reason = probe.reason;

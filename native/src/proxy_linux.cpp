@@ -15,8 +15,7 @@ __attribute__((visibility("default"))) int PlayerMain(int argc, char** argv) {
     const std::string directory = uvdg::ExecutableDirectory();
     const auto preflight = uvdg::RunPreflight(directory + "/DriverGuard.ini");
     if (!preflight.Passed()) {
-        uvdg::ShowFailureDialog(preflight);
-        return 1;
+        if (!uvdg::ShowFailureDialog(preflight)) return 1;
     }
 
     const std::string originalPlayerPath = directory + "/UnityPlayerI.so";

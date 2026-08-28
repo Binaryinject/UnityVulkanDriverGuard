@@ -18,10 +18,13 @@ struct LocalizedText {
     const char* driverTitle;
     const char* vulkanTitle;
     const char* updateDriver;
+    const char* continueRunning;
     const char* exit;
     const char* gpu;
     const char* installedDriver;
     const char* vulkanApi;
+    const char* requiredVulkanApi;
+    const char* orNewer;
     const char* recommendedDriver;
 };
 

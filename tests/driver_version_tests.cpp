@@ -27,6 +27,18 @@ void RunDriverVersionTests() {
     Require(uvdg::FormatVulkanVersion((1u << 22) | (1u << 12)) == "1.1.0",
             "Vulkan API version formatting is wrong");
 
+    uvdg::PreflightResult denied;
+    denied.failure = uvdg::FailureKind::DriverDenied;
+    denied.gpu.apiVersion = (1u << 22) | (1u << 12);
+    Require(denied.requiredVulkanMajor == 1 && denied.requiredVulkanMinor == 1,
+            "default dialog requirement should be Vulkan 1.1");
+    Require(denied.CanContinue(), "Vulkan 1.1 driver warning should allow continuing");
+    denied.gpu.apiVersion = (1u << 22);
+    Require(!denied.CanContinue(), "Vulkan 1.0 driver warning must remain blocking");
+    denied.failure = uvdg::FailureKind::VulkanVersionUnsupported;
+    denied.gpu.apiVersion = (1u << 22) | (2u << 12);
+    Require(!denied.CanContinue(), "Vulkan capability failure must remain blocking");
+
     Require(uvdg::LanguageFromLocale("zh-CN") == uvdg::Language::Chinese,
             "Chinese locale detection is wrong");
     Require(uvdg::LanguageFromLocale("ja_JP.UTF-8") == uvdg::Language::Japanese,

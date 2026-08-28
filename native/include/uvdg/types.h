@@ -90,11 +90,19 @@ enum class FailureKind {
 struct PreflightResult {
     FailureKind failure = FailureKind::None;
     GpuInfo gpu;
+    std::uint32_t requiredVulkanMajor = 1;
+    std::uint32_t requiredVulkanMinor = 1;
     std::string reason;
     std::string suggestedVersion;
     std::string downloadUrl;
 
     bool Passed() const { return failure == FailureKind::None; }
+    bool CanContinue() const {
+        const std::uint32_t major = (gpu.apiVersion >> 22) & 0x7f;
+        const std::uint32_t minor = (gpu.apiVersion >> 12) & 0x3ff;
+        return failure == FailureKind::DriverDenied &&
+               (major > 1 || (major == 1 && minor >= 1));
+    }
 };
 
 }  // namespace uvdg

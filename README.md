@@ -12,7 +12,7 @@ Unity Vulkan Driver Guard is a pre-render GPU check for standalone Unity players
 - UE5-style driver deny rules constrained by Vulkan RHI, adapter-name regex, and optional Vulkan `DeviceId`/`DriverId` selectors.
 - A vendor-specific recommended driver version and download URL.
 
-If a check fails, the native dialog shows the GPU, installed driver, Vulkan version, reason, recommended version, and an **Update driver** button. There is no render-API switch. The other action is **Exit**.
+If a check fails, the native dialog shows the GPU, installed driver, Vulkan version, reason, recommended version, and an **Update driver** button. A deny-listed driver that still exposes Vulkan 1.1 or newer also offers **Continue anyway**. Missing Vulkan support and Vulkan versions below 1.1 remain blocking. There is no render-API switch.
 
 The dialog follows the operating-system language for Chinese, Japanese, and Korean. Every other system language uses English.
 

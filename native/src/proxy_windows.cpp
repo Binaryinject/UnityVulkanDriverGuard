@@ -16,8 +16,7 @@ int ForwardUnityMain(const char* exportName, HINSTANCE instance, HINSTANCE previ
     const auto configPath = (directory / "DriverGuard.ini").u8string();
     const uvdg::PreflightResult preflight = uvdg::RunPreflight(configPath);
     if (!preflight.Passed()) {
-        uvdg::ShowFailureDialog(preflight);
-        return 1;
+        if (!uvdg::ShowFailureDialog(preflight)) return 1;
     }
 
     const auto originalPlayerPath = directory / L"UnityPlayerI.dll";
