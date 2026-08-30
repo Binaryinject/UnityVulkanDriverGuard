@@ -18,7 +18,7 @@ __attribute__((visibility("default"))) int PlayerMain(int argc, char** argv) {
         if (!uvdg::ShowFailureDialog(preflight)) return 1;
     }
 
-    const std::string originalPlayerPath = directory + "/UnityPlayerI.so";
+    const std::string originalPlayerPath = directory + "/UnityPlayer_.so";
     void* originalPlayer = dlopen(originalPlayerPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!originalPlayer) {
         std::fprintf(stderr, "Unable to load %s: %s\n", originalPlayerPath.c_str(), dlerror());
@@ -27,7 +27,7 @@ __attribute__((visibility("default"))) int PlayerMain(int argc, char** argv) {
     const auto originalMain = reinterpret_cast<PlayerMainFunction>(
         dlsym(originalPlayer, "_Z10PlayerMainiPPc"));
     if (!originalMain) {
-        std::fprintf(stderr, "UnityPlayerI.so does not export PlayerMain(int, char**).\n");
+        std::fprintf(stderr, "UnityPlayer_.so does not export PlayerMain(int, char**).\n");
         return 1;
     }
     return originalMain(argc, argv);

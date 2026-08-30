@@ -1,8 +1,8 @@
-# Unity Vulkan Driver Guard
+# Graphic Driver Guard
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Unity Vulkan Driver Guard is a pre-render GPU check for standalone Unity players. It runs before Unity creates its graphics device and is intended for games that must use Vulkan and cannot offer a Direct3D fallback.
+Graphic Driver Guard is a pre-render GPU check for standalone Unity players. It runs before Unity creates its graphics device and is intended for games that must use Vulkan and cannot offer a Direct3D fallback.
 
 ## What It Checks
 
@@ -33,7 +33,7 @@ The project does not copy Epic source code. It implements the same data model an
 
 The Unity postprocessor patches a completed player in place:
 
-1. `UnityPlayer.dll` / `UnityPlayer.so` from the Unity build is renamed to `UnityPlayerI.dll` / `UnityPlayerI.so`.
+1. `UnityPlayer.dll` / `UnityPlayer.so` from the Unity build is renamed to `UnityPlayer_.dll` / `UnityPlayer_.so`.
 2. The same-name proxy is copied into its place.
 3. The existing game executable is unchanged and still starts one process.
 4. The proxy runs the preflight, then forwards to Unity's original player entry point.
@@ -42,12 +42,12 @@ Windows exports `UnityMain` and `UnityMain2`. Unity 6 Linux exports the actual `
 
 ## Unity Installation
 
-This repository is a complete Unity package. It can be copied directly into a project's `Packages/UnityVulkanDriverGuard` directory:
+This repository is a complete Unity package. It can be copied directly into a project's `Packages/GraphicDriverGuard` directory:
 
 ```text
 YourGame/
   Packages/
-    UnityVulkanDriverGuard/
+    GraphicDriverGuard/
       package.json
       Editor/
       Native~/
@@ -58,17 +58,17 @@ When installed this way, no files need to be copied into `Assets/Plugins`. `Nati
 Alternatively, add this repository as a local/Git package in `Packages/manifest.json`:
 
 ```json
-"com.fstgame.unity-vulkan-driver-guard": "https://github.com/Binaryinject/UnityVulkanDriverGuard.git"
+"com.fstgame.graphic-driver-guard": "https://github.com/Binaryinject/GraphicDriverGuard.git"
 ```
 
 Tagged GitHub releases provide two ready-to-install archives:
 
-- Import the `.unitypackage` through **Assets > Import Package > Custom Package**. It installs as an embedded package under `Packages/UnityVulkanDriverGuard`.
+- Import the `.unitypackage` through **Assets > Import Package > Custom Package**. It installs as an embedded package under `Packages/GraphicDriverGuard`.
 - Install the `.tgz` through **Package Manager > Add package from tarball** to keep the package under `Packages`.
 
 The release workflow builds and tests both native proxies before creating either archive. The `.unitypackage` is self-contained and requires no extra importer package. Both installation methods have the same build behavior.
 
-Open **Project Settings > Player > Unity Vulkan Driver Guard** to edit the minimum Vulkan version, per-platform minimum and recommended driver versions, vendor URLs, and optional deny-list rules. The postprocessor applies to `StandaloneWindows64` and `StandaloneLinux64` builds.
+Open **Project Settings > Player > Graphic Driver Guard** to edit the minimum Vulkan version, per-platform minimum and recommended driver versions, vendor URLs, and optional deny-list rules. The postprocessor applies to `StandaloneWindows64` and `StandaloneLinux64` builds.
 
 The native proxy binaries are expected at:
 
@@ -129,4 +129,4 @@ The first command only emits the current NVIDIA/AMD/Intel IDs as comments. A `--
 - Windows uses Task Dialog and falls back to `MessageBox`; the proxy is statically linked to the MSVC runtime.
 - The proxy must be built for the same architecture as the Unity player (`x86_64` in the supplied targets).
 
-UnityVulkanDriverGuard
+GraphicDriverGuard

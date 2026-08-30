@@ -1,0 +1,8 @@
+{
+  "name": "GraphicDriverGuard.Editor",
+  "rootNamespace": "GraphicDriverGuard.Editor",
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": true
+}

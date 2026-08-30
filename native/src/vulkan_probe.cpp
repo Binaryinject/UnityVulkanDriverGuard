@@ -218,8 +218,8 @@ ProbeResult ProbeVulkan() {
     }
 
     const VkApplicationInfo applicationInfo{
-        VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr, "UnityVulkanDriverGuard", 1,
-        "UnityVulkanDriverGuard", 1, VK_API_VERSION_1_1};
+        VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr, "GraphicDriverGuard", 1,
+        "GraphicDriverGuard", 1, VK_API_VERSION_1_1};
     const VkInstanceCreateInfo createInfo{
         VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &applicationInfo,
         0, nullptr, 0, nullptr};

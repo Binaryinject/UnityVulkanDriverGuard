@@ -13,7 +13,7 @@ PACKAGE_FILES = (
     "package.json",
     "Editor/DriverGuardBuildProcessor.cs",
     "Editor/DriverGuardSettings.cs",
-    "Editor/UnityVulkanDriverGuard.Editor.asmdef",
+    "Editor/GraphicDriverGuard.Editor.asmdef",
     "Native~/Linux/x86_64/UnityPlayer.so",
     "Native~/README.md",
     "Native~/Windows/x86_64/UnityPlayer.dll",
@@ -67,9 +67,9 @@ def create_unitypackage(root: Path, files, output: Path):
     def write(archive):
         for path in files:
             relative = path.relative_to(root).as_posix()
-            asset_path = f"Packages/UnityVulkanDriverGuard/{relative}"
+            asset_path = f"Packages/GraphicDriverGuard/{relative}"
             guid = hashlib.md5(
-                f"com.fstgame.unity-vulkan-driver-guard:{relative}".encode("utf-8")
+                f"com.fstgame.graphic-driver-guard:{relative}".encode("utf-8")
             ).hexdigest()
             add_bytes(archive, f"{guid}/asset", path.read_bytes())
             add_bytes(archive, f"{guid}/asset.meta", unity_meta(guid))
@@ -79,7 +79,7 @@ def create_unitypackage(root: Path, files, output: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create Unity Vulkan Driver Guard release archives.")
+    parser = argparse.ArgumentParser(description="Create Graphic Driver Guard release archives.")
     parser.add_argument("--version", required=True)
     parser.add_argument("--output-dir", type=Path, default=Path("dist"))
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
@@ -91,7 +91,7 @@ def main():
         raise ValueError(f"Release version {args.version} does not match package.json {package_version}")
 
     files = list(package_files(root))
-    base_name = f"UnityVulkanDriverGuard-{args.version}"
+    base_name = f"GraphicDriverGuard-{args.version}"
     create_upm(root, files, args.output_dir / f"{base_name}.tgz")
     create_unitypackage(root, files, args.output_dir / f"{base_name}.unitypackage")
     print(f"Created release packages in {args.output_dir}")

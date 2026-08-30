@@ -1,9 +1,0 @@
-{
-  "name": "UnityVulkanDriverGuard.Editor",
-  "rootNamespace": "UnityVulkanDriverGuard.Editor",
-  "includePlatforms": [
-    "Editor"
-  ],
-  "autoReferenced": true
-}
-

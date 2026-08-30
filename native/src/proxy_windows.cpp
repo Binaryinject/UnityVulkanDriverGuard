@@ -19,12 +19,12 @@ int ForwardUnityMain(const char* exportName, HINSTANCE instance, HINSTANCE previ
         if (!uvdg::ShowFailureDialog(preflight)) return 1;
     }
 
-    const auto originalPlayerPath = directory / L"UnityPlayerI.dll";
+    const auto originalPlayerPath = directory / L"UnityPlayer_.dll";
     const HMODULE originalPlayer = LoadLibraryExW(originalPlayerPath.c_str(), nullptr,
                                                    LOAD_WITH_ALTERED_SEARCH_PATH);
     if (!originalPlayer) {
         MessageBoxW(nullptr,
-                    L"UnityPlayerI.dll could not be loaded. Reinstall the game.",
+                    L"UnityPlayer_.dll could not be loaded. Reinstall the game.",
                     L"Game installation is damaged", MB_OK | MB_ICONERROR);
         return 1;
     }

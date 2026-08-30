@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace UnityVulkanDriverGuard.Editor
+namespace GraphicDriverGuard.Editor
 {
     internal enum DriverRulePlatform
     {
@@ -42,7 +42,7 @@ namespace UnityVulkanDriverGuard.Editor
         public List<DriverDenyRule> denyList = new List<DriverDenyRule>();
     }
 
-    [FilePath("ProjectSettings/UnityVulkanDriverGuardSettings.asset", FilePathAttribute.Location.ProjectFolder)]
+    [FilePath("ProjectSettings/GraphicDriverGuardSettings.asset", FilePathAttribute.Location.ProjectFolder)]
     internal sealed class DriverGuardSettings : ScriptableSingleton<DriverGuardSettings>
     {
         public int minimumVulkanMajor = 1;
@@ -104,7 +104,7 @@ namespace UnityVulkanDriverGuard.Editor
         private UnityEditor.Editor settingsEditor;
 
         private DriverGuardSettingsProvider()
-            : base("Project/Player/Unity Vulkan Driver Guard", SettingsScope.Project)
+            : base("Project/Player/Graphic Driver Guard", SettingsScope.Project)
         {
             keywords = new HashSet<string>(new[] { "Vulkan", "GPU", "Driver", "Deny List" });
         }

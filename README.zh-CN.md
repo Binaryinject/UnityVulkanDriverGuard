@@ -1,8 +1,8 @@
-# Unity Vulkan Driver Guard
+# Graphic Driver Guard
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Unity Vulkan Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检测工具。它会在 Unity 创建图形设备之前运行，适合必须使用 Vulkan、不能提供 Direct3D 后备方案的游戏。
+Graphic Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检测工具。它会在 Unity 创建图形设备之前运行，适合必须使用 Vulkan、不能提供 Direct3D 后备方案的游戏。
 
 ## 检测内容
 
@@ -33,7 +33,7 @@ Unity Vulkan Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检
 
 Unity 构建后处理会直接修改已完成的 Player：
 
-1. 将 Unity 构建生成的 `UnityPlayer.dll` / `UnityPlayer.so` 改名为 `UnityPlayerI.dll` / `UnityPlayerI.so`。
+1. 将 Unity 构建生成的 `UnityPlayer.dll` / `UnityPlayer.so` 改名为 `UnityPlayer_.dll` / `UnityPlayer_.so`。
 2. 将同名代理放到原来的 `UnityPlayer.dll` / `UnityPlayer.so` 位置。
 3. 游戏主可执行文件保持不变，启动时仍然只有一个游戏进程。
 4. 代理先执行检测，通过后再转发到 Unity 原始 Player 入口。
@@ -42,12 +42,12 @@ Windows 代理导出 `UnityMain` 和 `UnityMain2`。Unity 6 Linux 实际导出 `
 
 ## Unity 安装
 
-本仓库本身就是完整的 Unity Package，可以直接复制到项目的 `Packages/UnityVulkanDriverGuard`：
+本仓库本身就是完整的 Unity Package，可以直接复制到项目的 `Packages/GraphicDriverGuard`：
 
 ```text
 YourGame/
   Packages/
-    UnityVulkanDriverGuard/
+    GraphicDriverGuard/
       package.json
       Editor/
       Native~/
@@ -58,17 +58,17 @@ YourGame/
 也可以在 `Packages/manifest.json` 中使用 Git 地址：
 
 ```json
-"com.fstgame.unity-vulkan-driver-guard": "https://github.com/Binaryinject/UnityVulkanDriverGuard.git"
+"com.fstgame.graphic-driver-guard": "https://github.com/Binaryinject/GraphicDriverGuard.git"
 ```
 
 带 Tag 的 GitHub Release 会同时提供两种可直接安装的压缩包：
 
-- 在 Unity 中通过 **Assets > Import Package > Custom Package** 导入 `.unitypackage`，它会作为嵌入式包安装到 `Packages/UnityVulkanDriverGuard`。
+- 在 Unity 中通过 **Assets > Import Package > Custom Package** 导入 `.unitypackage`，它会作为嵌入式包安装到 `Packages/GraphicDriverGuard`。
 - 在 **Package Manager > Add package from tarball** 中选择 `.tgz`，包会继续位于 `Packages` 下。
 
 Release 流程会先编译并测试 Windows、Linux 两个平台的原生代理，再生成这两种压缩包。`.unitypackage` 自带全部内容，用户不需要额外安装导入工具；两种安装方式的构建行为相同。
 
-在 **Project Settings > Player > Unity Vulkan Driver Guard** 中可以编辑最低 Vulkan 版本、各平台最低及建议驱动版本、厂商下载地址和可选拒绝列表。构建后处理适用于 `StandaloneWindows64` 和 `StandaloneLinux64`。
+在 **Project Settings > Player > Graphic Driver Guard** 中可以编辑最低 Vulkan 版本、各平台最低及建议驱动版本、厂商下载地址和可选拒绝列表。构建后处理适用于 `StandaloneWindows64` 和 `StandaloneLinux64`。
 
 原生代理文件应位于：
 
