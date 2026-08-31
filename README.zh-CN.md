@@ -42,12 +42,12 @@ Windows 代理导出 `UnityMain` 和 `UnityMain2`。Unity 6 Linux 实际导出 `
 
 ## Unity 安装
 
-本仓库本身就是完整的 Unity Package，可以直接复制到项目的 `Packages/GraphicDriverGuard`：
+本仓库本身就是完整的 Unity Package，可以直接复制到项目的 `Packages/com.fstgame.graphic-driver-guard`：
 
 ```text
 YourGame/
   Packages/
-    GraphicDriverGuard/
+    com.fstgame.graphic-driver-guard/
       package.json
       Editor/
       Native~/
@@ -63,7 +63,7 @@ YourGame/
 
 带 Tag 的 GitHub Release 会同时提供两种可直接安装的压缩包：
 
-- 在 Unity 中通过 **Assets > Import Package > Custom Package** 导入 `.unitypackage`，它会作为嵌入式包安装到 `Packages/GraphicDriverGuard`。
+- 在 Unity 中通过 **Assets > Import Package > Custom Package** 导入 `.unitypackage`，它会作为嵌入式包安装到 `Packages/com.fstgame.graphic-driver-guard`。
 - 在 **Package Manager > Add package from tarball** 中选择 `.tgz`，包会继续位于 `Packages` 下。
 
 Release 流程会先编译并测试 Windows、Linux 两个平台的原生代理，再生成这两种压缩包。`.unitypackage` 自带全部内容，用户不需要额外安装导入工具；两种安装方式的构建行为相同。

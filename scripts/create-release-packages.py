@@ -67,7 +67,7 @@ def create_unitypackage(root: Path, files, output: Path):
     def write(archive):
         for path in files:
             relative = path.relative_to(root).as_posix()
-            asset_path = f"Packages/GraphicDriverGuard/{relative}"
+            asset_path = f"Packages/com.fstgame.graphic-driver-guard/{relative}"
             guid = hashlib.md5(
                 f"com.fstgame.graphic-driver-guard:{relative}".encode("utf-8")
             ).hexdigest()

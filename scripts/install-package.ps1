@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $source = Split-Path -Parent $PSScriptRoot
-$destination = Join-Path (Join-Path (Resolve-Path $UnityProjectPath) "Packages") "GraphicDriverGuard"
+$destination = Join-Path (Join-Path (Resolve-Path $UnityProjectPath) "Packages") "com.fstgame.graphic-driver-guard"
 if ([IO.Path]::GetFullPath($destination).TrimEnd('\') -eq [IO.Path]::GetFullPath($source).TrimEnd('\')) {
     throw "The Unity project cannot be the driver guard repository itself."
 }

@@ -42,12 +42,12 @@ Windows exports `UnityMain` and `UnityMain2`. Unity 6 Linux exports the actual `
 
 ## Unity Installation
 
-This repository is a complete Unity package. It can be copied directly into a project's `Packages/GraphicDriverGuard` directory:
+This repository is a complete Unity package. It can be copied directly into a project's `Packages/com.fstgame.graphic-driver-guard` directory:
 
 ```text
 YourGame/
   Packages/
-    GraphicDriverGuard/
+    com.fstgame.graphic-driver-guard/
       package.json
       Editor/
       Native~/
@@ -63,7 +63,7 @@ Alternatively, add this repository as a local/Git package in `Packages/manifest.
 
 Tagged GitHub releases provide two ready-to-install archives:
 
-- Import the `.unitypackage` through **Assets > Import Package > Custom Package**. It installs as an embedded package under `Packages/GraphicDriverGuard`.
+- Import the `.unitypackage` through **Assets > Import Package > Custom Package**. It installs as an embedded package under `Packages/com.fstgame.graphic-driver-guard`.
 - Install the `.tgz` through **Package Manager > Add package from tarball** to keep the package under `Packages`.
 
 The release workflow builds and tests both native proxies before creating either archive. The `.unitypackage` is self-contained and requires no extra importer package. Both installation methods have the same build behavior.
