@@ -1,6 +1,6 @@
 {
   "name": "com.fstgame.graphic-driver-guard",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "displayName": "Graphic Driver Guard",
   "description": "Checks Vulkan support and GPU driver policy before Unity creates its graphics device on Windows and Linux.",
   "unity": "2021.3",
