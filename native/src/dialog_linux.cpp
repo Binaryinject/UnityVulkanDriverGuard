@@ -1,6 +1,7 @@
 #include "uvdg/preflight.h"
 
 #include "uvdg/localization.h"
+#include "uvdg/dx12_probe.h"
 #include "uvdg/vulkan_probe.h"
 
 #include <array>
@@ -74,11 +75,19 @@ std::string Details(const PreflightResult& result, const Language language) {
     if (!result.gpu.deviceName.empty()) {
         stream << "\n\n" << text.gpu << ": " << result.gpu.deviceName
                << "\n" << text.installedDriver << ": "
-               << result.gpu.unifiedDriverVersion.ToString()
-               << "\n" << text.vulkanApi << ": " << FormatVulkanVersion(result.gpu.apiVersion)
-               << "\n" << text.requiredVulkanApi << ": "
-               << result.requiredVulkanMajor << '.' << result.requiredVulkanMinor
-               << ' ' << text.orNewer;
+               << result.gpu.unifiedDriverVersion.ToString();
+        if (result.checkVulkan) {
+            stream << "\n" << text.vulkanApi << ": " << FormatVulkanVersion(result.gpu.apiVersion)
+                   << "\n" << text.requiredVulkanApi << ": "
+                   << result.requiredVulkanMajor << '.' << result.requiredVulkanMinor
+                   << ' ' << text.orNewer;
+        }
+        if (result.checkD3D12) {
+            stream << "\n" << text.dx12FeatureLevel << ": "
+                   << FormatFeatureLevel(result.gpu.d3d12FeatureLevel)
+                   << "\n" << text.requiredFeatureLevel << ": "
+                   << FormatFeatureLevel(result.requiredFeatureLevel) << ' ' << text.orNewer;
+        }
     }
     if (!result.suggestedVersion.empty()) {
         stream << "\n" << text.recommendedDriver << ": " << result.suggestedVersion;
@@ -100,8 +109,10 @@ std::string ExecutableDirectory() {
 bool ShowFailureDialog(const PreflightResult& result) {
     const Language language = SystemLanguage();
     const LocalizedText& text = Text(language);
+    const bool dx12Failure = result.failure == FailureKind::D3D12Unavailable ||
+                             result.failure == FailureKind::D3D12FeatureLevelUnsupported;
     const std::string title = result.failure == FailureKind::DriverDenied
-        ? text.driverTitle : text.vulkanTitle;
+        ? text.driverTitle : (dx12Failure ? text.dx12Title : text.vulkanTitle);
     const std::string details = Details(result, language);
 
     const bool canContinue = result.CanContinue();

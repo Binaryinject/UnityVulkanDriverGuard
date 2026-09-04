@@ -2,17 +2,19 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Graphic Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检测工具。它会在 Unity 创建图形设备之前运行，适合必须使用 Vulkan、不能提供 Direct3D 后备方案的游戏。
+Graphic Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检测工具。它会在 Unity 创建图形设备之前运行，可为必须使用 Vulkan 或 Direct3D 12（不能提供其它后备方案）的游戏做启动前检测。
 
 ## 检测内容
 
-- Vulkan Loader 是否可用，以及能否枚举物理设备。
-- 物理设备公开的 Vulkan API 版本，默认最低要求为 Vulkan 1.1。
+- 可在配置中选择需要检测的渲染 API：仅 Vulkan、仅 Direct3D 12，或两者都要。
+- Vulkan：Vulkan Loader 是否可用，以及能否枚举物理设备。
+- Vulkan：物理设备公开的 Vulkan API 版本，默认最低要求为 Vulkan 1.1。
+- Direct3D 12：是否具备可创建 D3D12 设备的硬件适配器，以及最高支持的 Feature Level（默认最低 `11_0`，可配置为 `11_1` / `12_0` / `12_1`）。
 - GPU 厂商和设备标识。
-- 参考 UE5 的驱动拒绝规则，并支持 Vulkan RHI、显卡名称正则、`DeviceId` 和 `DriverId` 精确约束。
+- 参考 UE5 的驱动拒绝规则，支持 `RHIName`（`Vulkan` / `D3D12`）、显卡名称正则、`DeviceId` 和 Vulkan `DriverId` 精确约束。
 - 各厂商的建议驱动版本和官方下载地址。
 
-检测失败时，原生弹窗会显示 GPU、已安装驱动、Vulkan 版本、失败原因、建议版本以及**更新驱动**按钮。命中驱动拒绝规则、但仍支持 Vulkan 1.1 或更高版本时，还会提供**仍然继续**按钮。缺少 Vulkan 支持或低于 Vulkan 1.1 时仍会阻止启动。弹窗不会提供切换渲染 API 的选项。
+检测失败时，原生弹窗会显示 GPU、已安装驱动、Vulkan 版本（或 D3D12 Feature Level）、失败原因、建议版本以及**更新驱动**按钮。命中驱动拒绝规则、但硬件仍满足所需的 Vulkan API / D3D12 Feature Level 时，还会提供**仍然继续**按钮。缺少所需的渲染 API 支持或低于最低要求时仍会阻止启动。弹窗不会提供切换渲染 API 的选项。
 
 弹窗会根据操作系统语言自动选择中文、日文或韩文；除中日韩以外的所有系统语言统一使用英文。
 
@@ -22,7 +24,7 @@ Graphic Driver Guard 是用于 Unity PC 独立播放器的渲染前 GPU 检测�
 
 - 类似 `FGPUDriverInfo` 的厂商版本归一化和数字版本比较。
 - 支持 `<`、`<=`、`=`、`>=`、`>` 运算符的 `DriverDenyList` 条目。
-- 只有 `RHIName`、`AdapterNameRegex`、`DeviceId`、Vulkan `DriverId` 等选择器匹配后，规则才会拦截驱动。
+- 只有 `RHIName`（`Vulkan` 或 `D3D12`）、`AdapterNameRegex`、`DeviceId`、Vulkan `DriverId` 等选择器匹配后，规则才会拦截驱动。
 - `MinimumDriverVersion` 设置厂商全局最低版本，不需要配置 `DeviceId` 选择器。
 - `SuggestedDriverVersion` 和厂商驱动下载地址。
 - 类似 UE `RHIDetectAndWarnOfBadDrivers` 流程的启动早期阻断。
@@ -68,7 +70,7 @@ YourGame/
 
 Release 流程会先编译并测试 Windows、Linux 两个平台的原生代理，再生成这两种压缩包。`.unitypackage` 自带全部内容，用户不需要额外安装导入工具；两种安装方式的构建行为相同。
 
-在 **Project Settings > Player > Graphic Driver Guard** 中可以编辑最低 Vulkan 版本、各平台最低及建议驱动版本、厂商下载地址和可选拒绝列表。构建后处理适用于 `StandaloneWindows64` 和 `StandaloneLinux64`。
+在 **Project Settings > Player > Graphic Driver Guard** 中可以编辑渲染 API 选择（Vulkan / Direct3D 12）、最低 Vulkan 版本、最低 D3D12 Feature Level、各平台最低及建议驱动版本、厂商下载地址和可选拒绝列表。构建后处理适用于 `StandaloneWindows64` 和 `StandaloneLinux64`。Direct3D 12 检测仅在 Windows 上生效。
 
 原生代理文件应位于：
 
@@ -102,6 +104,8 @@ Unity 冒烟工程强制使用 **IL2CPP** 和 Vulkan，不使用 Mono Player，�
 ```ini
 [Global]
 MinimumVulkanVersion=1.1
+RenderAPI=Vulkan,D3D12
+MinimumFeatureLevel=12_0
 
 [GPU_NVIDIA]
 MinimumDriverVersion=516.25
@@ -109,7 +113,9 @@ SuggestedDriverVersion=516.25
 DownloadURL=https://www.nvidia.com/Download/index.aspx
 ```
 
-最低版本作用于该厂商的所有 Vulkan 设备，生成时不会写入 `DeviceId`。低于该版本会显示警告；满足所需 Vulkan API 时玩家仍可选择继续运行。最低版本和可选拒绝列表应结合项目兼容性验证及厂商公告维护。
+`RenderAPI` 接受逗号分隔的 `Vulkan` 和/或 `D3D12`，决定启动前检测哪些渲染 API；缺省时仅检测 Vulkan。`MinimumFeatureLevel` 是 Direct3D 12 的最低 Feature Level（`11_0`、`11_1`、`12_0`、`12_1`），缺省为 `11_0`。
+
+最低驱动版本作用于该厂商的所有设备（不分渲染 API），生成时不会写入 `DeviceId`。低于该版本会显示警告；满足所需 Vulkan API / D3D12 Feature Level 时玩家仍可选择继续运行。最低版本和可选拒绝列表应结合项目兼容性验证及厂商公告维护。
 
 ### 使用 pci.ids 自动生成 Device ID
 
@@ -124,7 +130,7 @@ python scripts/generate-driverguard-ini.py --output DriverGuard.generated.ini --
 
 ## 平台说明
 
-- Windows 动态加载 `vulkan-1.dll`，Linux 动态加载 `libvulkan.so.1`，因此 Unity Editor 和游戏工程不需要 Vulkan SDK 头文件或链接库。
+- Windows 动态加载 `vulkan-1.dll` 以及 `d3d12.dll` / `dxgi.dll`，Linux 动态加载 `libvulkan.so.1`，因此 Unity Editor 和游戏工程不需要 Vulkan SDK 头文件或链接库。
 - Linux 弹窗依次尝试 `zenity` 和 `kdialog`；如果桌面环境没有这些工具，失败原因会输出到 stderr。
 - Windows 使用 Task Dialog，并以 `MessageBox` 作为后备；代理静态链接 MSVC Runtime。
 - 代理架构必须与 Unity Player 一致，当前提供的产物目标为 `x86_64`。

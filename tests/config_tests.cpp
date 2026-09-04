@@ -29,6 +29,8 @@ void RunConfigTests() {
     std::filesystem::remove(path);
     Require(config.minimumVulkanMajor == 1 && config.minimumVulkanMinor == 1,
             "minimum Vulkan version was not parsed");
+    Require(config.checkVulkan && !config.checkD3D12,
+            "default render API must be Vulkan only");
     Require(config.driverDenyList.size() == 2,
             "deny-list and minimum driver rules were not parsed");
     Require(config.driverDenyList[0].deviceIds.size() == 1 &&
@@ -62,4 +64,52 @@ void RunConfigTests() {
     gpu.unifiedDriverVersion = uvdg::Version::Parse("516.25");
     Require(!uvdg::Matches(gpu, config.driverDenyList[1]),
             "vendor minimum boundary must be accepted");
+
+    // D3D12 render API selection and minimum feature level.
+    {
+        std::ofstream output(path);
+        output << "[Global]\nRenderAPI=D3D12\nMinimumFeatureLevel=12_0\n"
+                  "[GPU_NVIDIA]\nMinimumDriverVersion=551.76\n"
+                  "+DriverDenyList=(DriverVersion=\"<561.0\",RHIName=\"D3D12\","
+                  "DeviceId=\"0x1B80\",Reason=\"Known D3D12 issue\")\n";
+    }
+    const auto dx12 = uvdg::LoadConfig(path.string());
+    std::filesystem::remove(path);
+    Require(!dx12.checkVulkan && dx12.checkD3D12,
+            "RenderAPI=D3D12 must enable only D3D12");
+    Require(dx12.minimumFeatureLevel == uvdg::kFeatureLevel12_0,
+            "MinimumFeatureLevel was not parsed");
+    Require(dx12.driverDenyList.size() == 2,
+            "D3D12 deny rule and vendor minimum must be parsed");
+    Require(dx12.driverDenyList[0].rhiName == "D3D12" &&
+            dx12.driverDenyList[0].comparison == uvdg::Comparison::Less,
+            "D3D12 deny rule was not parsed");
+    Require(dx12.driverDenyList[1].rhiName.empty(),
+            "vendor minimum must apply to every render API");
+
+    // Both render APIs.
+    {
+        std::ofstream output(path);
+        output << "[Global]\nRenderAPI=Vulkan,D3D12\n";
+    }
+    const auto both = uvdg::LoadConfig(path.string());
+    std::filesystem::remove(path);
+    Require(both.checkVulkan && both.checkD3D12,
+            "RenderAPI=Vulkan,D3D12 must enable both APIs");
+
+    // RHI selector activation.
+    Require(uvdg::RhiIsActive("", true, false),
+            "empty RHIName must apply to every render API");
+    Require(uvdg::RhiIsActive("Vulkan", true, false),
+            "Vulkan rule must be active when Vulkan is checked");
+    Require(!uvdg::RhiIsActive("Vulkan", false, true),
+            "Vulkan rule must be inactive when only D3D12 is checked");
+    Require(uvdg::RhiIsActive("d3d12", false, true),
+            "D3D12 rule must be active when D3D12 is checked");
+    Require(!uvdg::RhiIsActive("d3d12", true, false),
+            "D3D12 rule must be inactive when only Vulkan is checked");
+    Require(uvdg::RhiIsActive("D3D12", true, true),
+            "RHI matching must be case-insensitive");
+    Require(!uvdg::RhiIsActive("opengl", true, true),
+            "unknown RHI must never be active");
 }

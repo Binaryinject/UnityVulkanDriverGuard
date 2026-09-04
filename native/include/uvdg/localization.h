@@ -17,6 +17,7 @@ struct LocalizedText {
     const char* windowTitle;
     const char* driverTitle;
     const char* vulkanTitle;
+    const char* dx12Title;
     const char* updateDriver;
     const char* continueRunning;
     const char* exit;
@@ -24,6 +25,8 @@ struct LocalizedText {
     const char* installedDriver;
     const char* vulkanApi;
     const char* requiredVulkanApi;
+    const char* dx12FeatureLevel;
+    const char* requiredFeatureLevel;
     const char* orNewer;
     const char* recommendedDriver;
 };

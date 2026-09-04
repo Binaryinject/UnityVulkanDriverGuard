@@ -1,5 +1,6 @@
 #include "tests.h"
 
+#include "uvdg/dx12_probe.h"
 #include "uvdg/localization.h"
 #include "uvdg/vulkan_probe.h"
 
@@ -27,6 +28,17 @@ void RunDriverVersionTests() {
     Require(uvdg::FormatVulkanVersion((1u << 22) | (1u << 12)) == "1.1.0",
             "Vulkan API version formatting is wrong");
 
+    Require(uvdg::ParseFeatureLevel("12_1") == uvdg::kFeatureLevel12_1,
+            "feature level 12_1 parsing is wrong");
+    Require(uvdg::ParseFeatureLevel("11.0") == uvdg::kFeatureLevel11_0,
+            "feature level 11.0 parsing is wrong");
+    Require(uvdg::ParseFeatureLevel("0xC000") == uvdg::kFeatureLevel12_0,
+            "feature level hex parsing is wrong");
+    Require(uvdg::ParseFeatureLevel("garbage") == 0,
+            "unknown feature level must parse to zero");
+    Require(uvdg::FormatFeatureLevel(uvdg::kFeatureLevel12_0) == "12_0",
+            "feature level formatting is wrong");
+
     uvdg::PreflightResult denied;
     denied.failure = uvdg::FailureKind::DriverDenied;
     denied.gpu.apiVersion = (1u << 22) | (1u << 12);
@@ -38,6 +50,16 @@ void RunDriverVersionTests() {
     denied.failure = uvdg::FailureKind::VulkanVersionUnsupported;
     denied.gpu.apiVersion = (1u << 22) | (2u << 12);
     Require(!denied.CanContinue(), "Vulkan capability failure must remain blocking");
+
+    uvdg::PreflightResult dx12Denied;
+    dx12Denied.failure = uvdg::FailureKind::DriverDenied;
+    dx12Denied.checkVulkan = false;
+    dx12Denied.checkD3D12 = true;
+    dx12Denied.requiredFeatureLevel = uvdg::kFeatureLevel12_0;
+    dx12Denied.gpu.d3d12FeatureLevel = uvdg::kFeatureLevel12_1;
+    Require(dx12Denied.CanContinue(), "D3D12 feature level above minimum should allow continuing");
+    dx12Denied.gpu.d3d12FeatureLevel = uvdg::kFeatureLevel11_0;
+    Require(!dx12Denied.CanContinue(), "D3D12 feature level below minimum must block");
 
     Require(uvdg::LanguageFromLocale("zh-CN") == uvdg::Language::Chinese,
             "Chinese locale detection is wrong");

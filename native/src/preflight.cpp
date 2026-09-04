@@ -1,6 +1,7 @@
 #include "uvdg/preflight.h"
 
 #include "uvdg/config.h"
+#include "uvdg/dx12_probe.h"
 #include "uvdg/vulkan_probe.h"
 
 #include <sstream>
@@ -9,35 +10,65 @@ namespace uvdg {
 
 PreflightResult RunPreflight(const std::string& configPath) {
     const Config config = LoadConfig(configPath);
-    const ProbeResult probe = ProbeVulkan();
 
     PreflightResult result;
     result.requiredVulkanMajor = config.minimumVulkanMajor;
     result.requiredVulkanMinor = config.minimumVulkanMinor;
-    result.failure = probe.failure;
-    result.gpu = probe.gpu;
-    result.reason = probe.reason;
-    if (probe.failure != FailureKind::None) return result;
+    result.checkVulkan = config.checkVulkan;
+    result.checkD3D12 = config.checkD3D12;
+    result.requiredFeatureLevel = config.minimumFeatureLevel;
 
-    const std::uint32_t major = (probe.gpu.apiVersion >> 22) & 0x7f;
-    const std::uint32_t minor = (probe.gpu.apiVersion >> 12) & 0x3ff;
-    if (major < config.minimumVulkanMajor ||
-        (major == config.minimumVulkanMajor && minor < config.minimumVulkanMinor)) {
-        result.failure = FailureKind::VulkanVersionUnsupported;
-        std::ostringstream reason;
-        reason << "This GPU exposes Vulkan " << FormatVulkanVersion(probe.gpu.apiVersion)
-               << ", but this game requires Vulkan " << config.minimumVulkanMajor
-               << '.' << config.minimumVulkanMinor << " or newer.";
-        result.reason = reason.str();
+    if (config.checkVulkan) {
+        const ProbeResult probe = ProbeVulkan();
+        result.gpu = probe.gpu;
+        if (probe.failure != FailureKind::None) {
+            result.failure = probe.failure;
+            result.reason = probe.reason;
+            return result;
+        }
+
+        const std::uint32_t major = (probe.gpu.apiVersion >> 22) & 0x7f;
+        const std::uint32_t minor = (probe.gpu.apiVersion >> 12) & 0x3ff;
+        if (major < config.minimumVulkanMajor ||
+            (major == config.minimumVulkanMajor && minor < config.minimumVulkanMinor)) {
+            result.failure = FailureKind::VulkanVersionUnsupported;
+            std::ostringstream reason;
+            reason << "This GPU exposes Vulkan " << FormatVulkanVersion(probe.gpu.apiVersion)
+                   << ", but this game requires Vulkan " << config.minimumVulkanMajor
+                   << '.' << config.minimumVulkanMinor << " or newer.";
+            result.reason = reason.str();
+        }
     }
 
-    const VendorPolicy& policy = PolicyFor(config, probe.gpu.vendorId);
+    if (config.checkD3D12 && result.failure == FailureKind::None) {
+        const D3D12ProbeResult dx12 = ProbeD3D12();
+        if (dx12.failure != FailureKind::None) {
+            result.failure = dx12.failure;
+            result.reason = dx12.reason;
+            if (!config.checkVulkan) result.gpu = dx12.gpu;
+            return result;
+        }
+        if (!config.checkVulkan) result.gpu = dx12.gpu;
+        result.gpu.d3d12FeatureLevel = dx12.featureLevel;
+        if (dx12.featureLevel < config.minimumFeatureLevel) {
+            result.failure = FailureKind::D3D12FeatureLevelUnsupported;
+            std::ostringstream reason;
+            reason << "This GPU supports Direct3D 12 feature level "
+                   << FormatFeatureLevel(dx12.featureLevel)
+                   << ", but this game requires feature level "
+                   << FormatFeatureLevel(config.minimumFeatureLevel) << " or newer.";
+            result.reason = reason.str();
+        }
+    }
+
+    const VendorPolicy& policy = PolicyFor(config, result.gpu.vendorId);
     result.suggestedVersion = policy.suggestedVersionText;
     result.downloadUrl = policy.downloadUrl;
     if (result.failure != FailureKind::None) return result;
 
     for (const DriverRule& rule : config.driverDenyList) {
-        if (!Matches(probe.gpu, rule)) continue;
+        if (!RhiIsActive(rule.rhiName, config.checkVulkan, config.checkD3D12)) continue;
+        if (!Matches(result.gpu, rule)) continue;
         result.failure = FailureKind::DriverDenied;
         result.reason = rule.reason.empty()
             ? "The installed graphics driver is on this game's deny list."

@@ -1,5 +1,7 @@
 #include "uvdg/config.h"
 
+#include "uvdg/dx12_probe.h"
+
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -191,7 +193,8 @@ bool ParseRule(const std::string& value, const std::uint32_t vendorId, DriverRul
     const auto rhiName = fields.find("rhiname");
     if (rhiName != fields.end()) {
         result.rhiName = rhiName->second;
-        if (Lower(result.rhiName) != "vulkan") return false;
+        const auto rhi = Lower(result.rhiName);
+        if (rhi != "vulkan" && rhi != "d3d12") return false;
     }
     const auto adapterName = fields.find("adapternameregex");
     if (adapterName != fields.end()) {
@@ -243,7 +246,9 @@ void AppendMinimumRule(Config& config, const VendorPolicy& policy,
     if (policy.minimumVersion.components.empty()) return;
     DriverRule rule;
     rule.vendorId = vendorId;
-    rule.rhiName = "Vulkan";
+    // A vendor minimum applies to every active render API (the installed driver
+    // serves both Vulkan and D3D12), so leave the RHI name empty.
+    rule.rhiName.clear();
     rule.comparison = Comparison::Less;
     rule.version = policy.minimumVersion;
     rule.reason = "The installed graphics driver is below this game's minimum version.";
@@ -294,6 +299,21 @@ Config LoadConfig(const std::string& path) {
                 const auto version = Version::Parse(value);
                 if (!version.components.empty()) config.minimumVulkanMajor = version.components[0];
                 if (version.components.size() > 1) config.minimumVulkanMinor = version.components[1];
+            } else if (key == "renderapi") {
+                config.checkVulkan = false;
+                config.checkD3D12 = false;
+                for (const auto& item : SplitSelectors(value)) {
+                    const auto api = Lower(item);
+                    if (api == "vulkan") {
+                        config.checkVulkan = true;
+                    } else if (api == "d3d12" || api == "direct3d12" || api == "dx12") {
+                        config.checkD3D12 = true;
+                    }
+                }
+                if (!config.checkVulkan && !config.checkD3D12) config.checkVulkan = true;
+            } else if (key == "minimumfeaturelevel") {
+                const auto level = ParseFeatureLevel(value);
+                if (level != 0) config.minimumFeatureLevel = level;
             }
             continue;
         }
@@ -328,6 +348,14 @@ bool Matches(const Version& installed, const DriverRule& rule) {
         case Comparison::GreaterOrEqual: return comparison >= 0;
         case Comparison::Greater: return comparison > 0;
     }
+    return false;
+}
+
+bool RhiIsActive(const std::string& ruleRhi, const bool checkVulkan, const bool checkD3D12) {
+    if (ruleRhi.empty()) return true;
+    const auto rhi = Lower(ruleRhi);
+    if (rhi == "vulkan") return checkVulkan;
+    if (rhi == "d3d12") return checkD3D12;
     return false;
 }
 

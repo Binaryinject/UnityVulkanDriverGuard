@@ -1,5 +1,6 @@
 #include "uvdg/preflight.h"
 #include "uvdg/localization.h"
+#include "uvdg/dx12_probe.h"
 #include "uvdg/vulkan_probe.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -74,18 +75,29 @@ bool ShowFailureDialog(const PreflightResult& result) {
         details << "\n\n" << text.gpu << ": " << result.gpu.deviceName;
         details << "\n" << text.installedDriver << ": "
                 << result.gpu.unifiedDriverVersion.ToString();
-        details << "\n" << text.vulkanApi << ": " << FormatVulkanVersion(result.gpu.apiVersion);
-        details << "\n" << text.requiredVulkanApi << ": "
-                << result.requiredVulkanMajor << '.' << result.requiredVulkanMinor
-                << ' ' << text.orNewer;
+        if (result.checkVulkan) {
+            details << "\n" << text.vulkanApi << ": " << FormatVulkanVersion(result.gpu.apiVersion);
+            details << "\n" << text.requiredVulkanApi << ": "
+                    << result.requiredVulkanMajor << '.' << result.requiredVulkanMinor
+                    << ' ' << text.orNewer;
+        }
+        if (result.checkD3D12) {
+            details << "\n" << text.dx12FeatureLevel << ": "
+                    << FormatFeatureLevel(result.gpu.d3d12FeatureLevel);
+            details << "\n" << text.requiredFeatureLevel << ": "
+                    << FormatFeatureLevel(result.requiredFeatureLevel) << ' ' << text.orNewer;
+        }
     }
     if (!result.suggestedVersion.empty()) {
         details << "\n" << text.recommendedDriver << ": " << result.suggestedVersion;
     }
 
+    const bool dx12Failure = result.failure == FailureKind::D3D12Unavailable ||
+                             result.failure == FailureKind::D3D12FeatureLevelUnsupported;
     const std::wstring windowTitle = Wide(text.windowTitle);
     const std::wstring title = Wide(result.failure == FailureKind::DriverDenied
-                                        ? text.driverTitle : text.vulkanTitle);
+                                        ? text.driverTitle
+                                        : (dx12Failure ? text.dx12Title : text.vulkanTitle));
     const std::wstring content = Wide(details.str());
     const std::wstring updateDriver = Wide(text.updateDriver);
     const std::wstring continueRunning = Wide(text.continueRunning);
