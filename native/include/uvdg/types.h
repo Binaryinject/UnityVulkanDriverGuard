@@ -51,6 +51,9 @@ struct DriverRule {
     std::string reason;
     std::string suggestedVersion;
     std::string downloadUrl;
+    // True for the vendor-wide MinimumDriverVersion rule synthesized by
+    // AppendMinimumRule, as opposed to an explicit deny-list entry.
+    bool fromMinimumVersion = false;
 };
 
 struct VendorPolicy {
@@ -109,6 +112,7 @@ struct PreflightResult {
     bool checkVulkan = true;
     bool checkD3D12 = false;
     std::uint32_t requiredFeatureLevel = kFeatureLevel11_0;
+    bool deniedByMinimumVersion = false;
     std::string reason;
     std::string suggestedVersion;
     std::string downloadUrl;

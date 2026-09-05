@@ -252,6 +252,7 @@ void AppendMinimumRule(Config& config, const VendorPolicy& policy,
     rule.comparison = Comparison::Less;
     rule.version = policy.minimumVersion;
     rule.reason = "The installed graphics driver is below this game's minimum version.";
+    rule.fromMinimumVersion = true;
     rule.suggestedVersion = policy.suggestedVersionText.empty()
         ? policy.minimumVersionText : policy.suggestedVersionText;
     rule.downloadUrl = policy.downloadUrl;

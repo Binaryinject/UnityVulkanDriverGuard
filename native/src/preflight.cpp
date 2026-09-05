@@ -70,6 +70,7 @@ PreflightResult RunPreflight(const std::string& configPath) {
         if (!RhiIsActive(rule.rhiName, config.checkVulkan, config.checkD3D12)) continue;
         if (!Matches(result.gpu, rule)) continue;
         result.failure = FailureKind::DriverDenied;
+        result.deniedByMinimumVersion = rule.fromMinimumVersion;
         result.reason = rule.reason.empty()
             ? "The installed graphics driver is on this game's deny list."
             : rule.reason;

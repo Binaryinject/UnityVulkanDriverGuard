@@ -38,6 +38,9 @@ void RunConfigTests() {
             config.driverDenyList[0].rhiName == "Vulkan" &&
             config.driverDenyList[0].suggestedVersion == "551.76",
             "deny-list selectors were not parsed");
+    Require(!config.driverDenyList[0].fromMinimumVersion &&
+            config.driverDenyList[1].fromMinimumVersion,
+            "minimum-version flag must distinguish synthesized minimum rules");
     Require(uvdg::Matches(uvdg::Version::Parse("546.33"), config.driverDenyList[0]),
             "older driver should match deny-list rule");
     Require(!uvdg::Matches(uvdg::Version::Parse("551.76"), config.driverDenyList[0]),

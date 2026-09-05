@@ -106,19 +106,31 @@ std::string LocalizedReason(const Language language, const PreflightResult& resu
 
     switch (language) {
         case Language::Chinese:
-            if (result.failure == FailureKind::DriverDenied) return "已安装的显卡驱动存在已知的 Vulkan 兼容性问题，请更新驱动后再启动游戏。";
+            if (result.failure == FailureKind::DriverDenied) {
+                return result.deniedByMinimumVersion
+                    ? "已安装的显卡驱动版本低于此游戏的最低要求，请更新驱动后再启动游戏。"
+                    : "已安装的显卡驱动存在已知的兼容性问题，请更新驱动后再启动游戏。";
+            }
             if (result.failure == FailureKind::VulkanLoaderMissing) return "未找到 Vulkan Loader，请安装或更新显卡驱动。";
             if (result.failure == FailureKind::NoPhysicalDevice) return "未找到支持 Vulkan 的显卡。";
             if (result.failure == FailureKind::D3D12Unavailable) return "未找到支持 Direct3D 12 的显卡或运行时，请更新显卡驱动。";
             return "Vulkan 初始化失败，请安装或更新显卡驱动。";
         case Language::Japanese:
-            if (result.failure == FailureKind::DriverDenied) return "インストール済みのグラフィックスドライバーには既知の Vulkan 互換性問題があります。ドライバーを更新してください。";
+            if (result.failure == FailureKind::DriverDenied) {
+                return result.deniedByMinimumVersion
+                    ? "インストール済みのグラフィックスドライバーが、このゲームの最小要件を下回っています。ドライバーを更新してください。"
+                    : "インストール済みのグラフィックスドライバーには既知の互換性問題があります。ドライバーを更新してください。";
+            }
             if (result.failure == FailureKind::VulkanLoaderMissing) return "Vulkan Loader が見つかりません。グラフィックスドライバーをインストールまたは更新してください。";
             if (result.failure == FailureKind::NoPhysicalDevice) return "Vulkan 対応 GPU が見つかりません。";
             if (result.failure == FailureKind::D3D12Unavailable) return "Direct3D 12 対応 GPU が見つかりません。グラフィックスドライバーを更新してください。";
             return "Vulkan の初期化に失敗しました。グラフィックスドライバーをインストールまたは更新してください。";
         case Language::Korean:
-            if (result.failure == FailureKind::DriverDenied) return "설치된 그래픽 드라이버에 알려진 Vulkan 호환성 문제가 있습니다. 드라이버를 업데이트해 주세요.";
+            if (result.failure == FailureKind::DriverDenied) {
+                return result.deniedByMinimumVersion
+                    ? "설치된 그래픽 드라이버가 이 게임의 최소 요구 사항보다 낮습니다. 드라이버를 업데이트해 주세요."
+                    : "설치된 그래픽 드라이버에 알려진 호환성 문제가 있습니다. 드라이버를 업데이트해 주세요.";
+            }
             if (result.failure == FailureKind::VulkanLoaderMissing) return "Vulkan Loader를 찾을 수 없습니다. 그래픽 드라이버를 설치하거나 업데이트해 주세요.";
             if (result.failure == FailureKind::NoPhysicalDevice) return "Vulkan을 지원하는 GPU를 찾을 수 없습니다.";
             if (result.failure == FailureKind::D3D12Unavailable) return "Direct3D 12를 지원하는 GPU를 찾을 수 없습니다. 그래픽 드라이버를 업데이트해 주세요.";
